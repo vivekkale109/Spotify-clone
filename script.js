@@ -1,34 +1,32 @@
-const playBtn = document.getElementById("playBtn");
-const progress = document.getElementById("progress");
-const songs = document.querySelectorAll(".song");
+const { app, BrowserWindow } = require("electron");
+const path = require("path");
 
-let audio = new Audio();
-let isPlaying = false;
+const scale = 1;
 
-songs.forEach(song => {
-  song.addEventListener("click", () => {
-    audio.src = song.dataset.src;
-    audio.play();
-    playBtn.textContent = "⏸";
-    isPlaying = true;
-  });
+function createWindow() {
+    const win = new BrowserWindow({
+        titleBarStyle: "hidden",
+        titleBarOverlay: true,
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js"),
+        },
+    });
+    win.maximize();
+    win.loadFile("index.html");
+}
+
+app.whenReady().then(() => {
+    createWindow();
+
+    app.on("activate", () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
+    });
 });
 
-playBtn.addEventListener("click", () => {
-  if (isPlaying) {
-    audio.pause();
-    playBtn.textContent = "▶";
-  } else {
-    audio.play();
-    playBtn.textContent = "⏸";
-  }
-  isPlaying = !isPlaying;
-});
-
-audio.addEventListener("timeupdate", () => {
-  progress.value = (audio.currentTime / audio.duration) * 100;
-});
-
-progress.addEventListener("input", () => {
-  audio.currentTime = (progress.value / 100) * audio.duration;
+app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") {
+        app.quit();
+    }
 });
